@@ -248,6 +248,103 @@
             font-size: 1.1rem;
             opacity: 0.8;
         }
+
+        .live-tracking {
+            background: rgba(74, 222, 128, 0.1);
+            border: 2px solid #4ade80;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .tracking-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4ade80;
+        }
+
+        .active-bet {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .active-bet.winning {
+            border-left-color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+        }
+
+        .active-bet.losing {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .bet-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status-live {
+            background: #ef4444;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .status-final {
+            background: #6b7280;
+            color: white;
+        }
+
+        .status-pending {
+            background: #fbbf24;
+            color: #000;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .score-display {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .bet-result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .result-winning {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .result-losing {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .date-badge {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.2);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin-right: 10px;
+            color: #667eea;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -287,6 +384,28 @@
         const API_KEY = 'f3a4b1e7f84f4d364b2fd8d4e6a1867a';
         const SPORT = 'basketball_ncaab';
 
+        // Your active bets (UPDATE THIS WHEN YOU PLACE BETS!)
+        const ACTIVE_BETS = [
+            {
+                id: 'purdue-indiana-feb20',
+                homeTeam: 'Purdue',
+                awayTeam: 'Indiana',
+                bet: 'OVER',
+                line: 148.5,
+                amount: 125,
+                date: '2026-02-20'
+            },
+            {
+                id: 'vcu-stlouis-feb20',
+                homeTeam: 'Saint Louis',
+                awayTeam: 'VCU',
+                bet: 'UNDER',
+                line: 164.5,
+                amount: 75,
+                date: '2026-02-20'
+            }
+        ];
+
         // Your winning formula for total bets
         const BETTING_CRITERIA = {
             // Look for games with specific total ranges
@@ -307,24 +426,22 @@
             content.innerHTML = `
                 <div class="loading">
                     <div class="spinner"></div>
-                    <p>Fetching latest odds...</p>
+                    <p>Fetching latest odds and scores...</p>
                 </div>
             `;
 
             try {
-                // Fetch odds from The Odds API
-                const response = await fetch(
-                    `https://api.the-odds-api.com/v4/sports/${SPORT}/odds/?apiKey=${API_KEY}&regions=us&markets=totals&oddsFormat=american`
-                );
-
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.status}`);
-                }
-
-                const games = await response.json();
+                // Fetch odds and scores
+                const [oddsData, scoresData] = await Promise.all([
+                    fetch(`https://api.the-odds-api.com/v4/sports/${SPORT}/odds/?apiKey=${API_KEY}&regions=us&markets=totals&oddsFormat=american`).then(r => r.json()),
+                    fetch(`https://api.the-odds-api.com/v4/sports/${SPORT}/scores/?apiKey=${API_KEY}&daysFrom=1`).then(r => r.json())
+                ]);
+                
+                // Display live tracking first
+                displayLiveTracking(scoresData);
                 
                 // Filter and rank games
-                const recommendations = analyzeGames(games);
+                const recommendations = analyzeGames(oddsData);
                 
                 // Display picks
                 displayPicks(recommendations);
@@ -348,6 +465,131 @@
                     </div>
                 `;
             }
+        }
+
+        function displayLiveTracking(scoresData) {
+            const content = document.getElementById('content');
+            
+            if (ACTIVE_BETS.length === 0) return;
+
+            let trackingHtml = `
+                <div class="live-tracking">
+                    <div class="tracking-title">🎯 Your Active Bets</div>
+            `;
+
+            ACTIVE_BETS.forEach(bet => {
+                const game = findGame(scoresData, bet);
+                trackingHtml += renderActiveBet(bet, game);
+            });
+
+            trackingHtml += `</div>`;
+            content.innerHTML = trackingHtml;
+        }
+
+        function findGame(scoresData, bet) {
+            return scoresData.find(game => {
+                const homeMatch = game.home_team.toLowerCase().includes(bet.homeTeam.toLowerCase()) ||
+                                 bet.homeTeam.toLowerCase().includes(game.home_team.toLowerCase());
+                const awayMatch = game.away_team.toLowerCase().includes(bet.awayTeam.toLowerCase()) ||
+                                 bet.awayTeam.toLowerCase().includes(game.away_team.toLowerCase());
+                return homeMatch && awayMatch;
+            });
+        }
+
+        function renderActiveBet(bet, game) {
+            if (!game) {
+                return `
+                    <div class="active-bet">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <strong>${bet.awayTeam} @ ${bet.homeTeam}</strong>
+                                <span class="bet-status status-pending">PENDING</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem; opacity: 0.8;">Your Bet: ${bet.bet} ${bet.line}</div>
+                                <div style="font-size: 0.9rem; opacity: 0.8;">Amount: $${bet.amount}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; opacity: 0.7; font-size: 0.9rem;">
+                            Game hasn't started yet
+                        </div>
+                    </div>
+                `;
+            }
+
+            const homeScore = game.scores?.[0]?.score || 0;
+            const awayScore = game.scores?.[1]?.score || 0;
+            const totalScore = homeScore + awayScore;
+            const isCompleted = game.completed;
+            const isLive = !isCompleted;
+
+            // Determine if winning
+            let isWinning = false;
+            let resultText = '';
+            
+            if (bet.bet === 'OVER') {
+                if (isCompleted) {
+                    isWinning = totalScore > bet.line;
+                    resultText = isWinning ? 
+                        `✅ WIN! Total: ${totalScore} (${bet.bet} ${bet.line})` :
+                        `❌ LOSS. Total: ${totalScore} (${bet.bet} ${bet.line})`;
+                } else {
+                    isWinning = totalScore > bet.line;
+                    const diff = totalScore - bet.line;
+                    resultText = isWinning ? 
+                        `Tracking OVER by ${diff.toFixed(1)} points` :
+                        `Need ${(bet.line - totalScore).toFixed(1)} more points`;
+                }
+            } else { // UNDER
+                if (isCompleted) {
+                    isWinning = totalScore < bet.line;
+                    resultText = isWinning ? 
+                        `✅ WIN! Total: ${totalScore} (${bet.bet} ${bet.line})` :
+                        `❌ LOSS. Total: ${totalScore} (${bet.bet} ${bet.line})`;
+                } else {
+                    isWinning = totalScore < bet.line;
+                    const diff = bet.line - totalScore;
+                    resultText = isWinning ? 
+                        `Tracking UNDER by ${diff.toFixed(1)} points` :
+                        `${(totalScore - bet.line).toFixed(1)} points over line`;
+                }
+            }
+
+            const betClass = isCompleted ? '' : (isWinning ? 'winning' : 'losing');
+            const statusClass = isCompleted ? 'status-final' : 'status-live';
+            const statusText = isCompleted ? 'FINAL' : 'LIVE';
+            const resultClass = isCompleted ? (isWinning ? 'result-winning' : 'result-losing') : 
+                                             (isWinning ? 'result-winning' : 'result-losing');
+
+            return `
+                <div class="active-bet ${betClass}">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div>
+                            <strong>${game.away_team} @ ${game.home_team}</strong>
+                            <span class="bet-status ${statusClass}">${statusText}</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 0.9rem; opacity: 0.8;">Your Bet: ${bet.bet} ${bet.line}</div>
+                            <div style="font-size: 0.9rem; opacity: 0.8;">Amount: $${bet.amount}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="score-display">
+                        ${game.away_team}: ${awayScore} | ${game.home_team}: ${homeScore}
+                        <span style="margin-left: 15px; color: #667eea;">Total: ${totalScore}</span>
+                    </div>
+
+                    <div class="bet-result ${resultClass}">
+                        ${resultText}
+                    </div>
+
+                    ${isCompleted && isWinning ? `
+                        <div style="margin-top: 10px; font-size: 0.9rem; color: #4ade80;">
+                            💰 Profit: +$${(bet.amount * 0.9091).toFixed(2)}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
         }
 
         function analyzeGames(games) {
@@ -492,6 +734,12 @@
             const confidenceClass = pick.confidence === 'HIGH' ? 'high-confidence' : 'medium-confidence';
             const badgeClass = pick.confidence === 'HIGH' ? 'confidence-high' : 'confidence-medium';
             
+            const gameDate = pick.gameTime.toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+            
             const gameTimeStr = pick.gameTime.toLocaleTimeString('en-US', {
                 hour: 'numeric',
                 minute: '2-digit',
@@ -517,6 +765,7 @@
                     <div class="game-matchup">${pick.game}</div>
                     
                     <div class="game-info">
+                        <span class="date-badge">${gameDate}</span>
                         <span>🕐 ${gameTimeStr} ET</span>
                         <span>📊 ${pick.bookmaker}</span>
                     </div>
