@@ -345,6 +345,105 @@
             color: #667eea;
             font-weight: bold;
         }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 12px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-color: rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+        }
+
+        .tab-icon {
+            font-size: 1.2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin: 30px 0 20px 0;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .past-result {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 4px solid #6b7280;
+        }
+
+        .past-result.won {
+            border-left-color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+        }
+
+        .past-result.lost {
+            border-left-color: #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .badge-won {
+            background: #4ade80;
+            color: #000;
+        }
+
+        .badge-lost {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .analysis-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .analysis-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -369,6 +468,21 @@
             </div>
         </div>
 
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('today')">
+                <span class="tab-icon">🎯</span>
+                <span>Today's Picks</span>
+            </div>
+            <div class="tab" onclick="switchTab('upcoming')">
+                <span class="tab-icon">📅</span>
+                <span>Upcoming</span>
+            </div>
+            <div class="tab" onclick="switchTab('past')">
+                <span class="tab-icon">📊</span>
+                <span>Past Results</span>
+            </div>
+        </div>
+
         <div id="content">
             <div class="loading">
                 <div class="spinner"></div>
@@ -383,6 +497,108 @@
     <script>
         const API_KEY = 'f3a4b1e7f84f4d364b2fd8d4e6a1867a';
         const SPORT = 'basketball_ncaab';
+
+        let currentTab = 'today';
+
+        // Your betting history (UPDATE THIS WHEN BETS SETTLE!)
+        const PAST_RESULTS = [
+            {
+                date: '2026-02-18',
+                game: 'Penn State vs Rutgers',
+                bet: 'OVER',
+                line: 148.5,
+                amount: 75,
+                result: 'WON',
+                finalScore: 'Penn State 78, Rutgers 75',
+                total: 153,
+                profit: 68.18,
+                analysis: 'Both teams trending OVER (Penn State 7 of last 9, Rutgers 4 of last 5). Model projected 150 points with 52% confidence. Hit by 4.5 points.'
+            },
+            {
+                date: '2026-02-18',
+                game: 'Creighton @ UConn',
+                bet: 'OVER',
+                line: 142.5,
+                amount: 75,
+                result: 'WON',
+                finalScore: 'UConn 78, Creighton 71',
+                total: 149,
+                profit: 68.18,
+                analysis: 'Strong OVER trend (Creighton 7 of last 10, UConn 8 of last 10). Model showed 71% OVER confidence in simulations. Hit by 6.5 points.'
+            },
+            {
+                date: '2026-02-16',
+                game: 'Duke vs Syracuse',
+                bet: 'OVER',
+                line: 142.5,
+                amount: 50,
+                result: 'WON',
+                finalScore: 'Duke 85, Syracuse 62',
+                total: 147,
+                profit: 45.45,
+                analysis: 'ACC matchup at Cameron Indoor. Last 5 H2H averaged 157.6 points. Model projected 71% OVER. Hit by 4.5 points.'
+            },
+            {
+                date: '2026-02-15',
+                game: 'Murray State @ Belmont',
+                bet: 'OVER',
+                line: 152.5,
+                amount: 100,
+                result: 'WON',
+                finalScore: 'Belmont 89, Murray State 78',
+                total: 167,
+                profit: 90.91,
+                analysis: 'High-scoring conference matchup. Both teams averaging 75+ PPG. Hit by 14.5 points - blowout victory.'
+            },
+            {
+                date: '2026-02-15',
+                game: 'San Diego @ San Francisco',
+                bet: 'UNDER',
+                line: 145.5,
+                amount: 100,
+                result: 'LOST',
+                finalScore: 'San Francisco 95, USF 76',
+                total: 171,
+                profit: -100,
+                analysis: 'WCC game went against trend. Avoided WCC unders since then. Lost by 25.5 points - lesson learned about conference tendencies.'
+            },
+            {
+                date: '2026-02-14',
+                game: 'Florida vs Texas A&M',
+                bet: 'OVER',
+                line: 152.5,
+                amount: 100,
+                result: 'WON',
+                finalScore: 'Florida 89, TAMU 73',
+                total: 162,
+                profit: 90.91,
+                analysis: 'SEC offensive matchup. Both teams trending over. Hit by 9.5 points.'
+            },
+            {
+                date: '2026-02-14',
+                game: 'Houston vs Kansas',
+                bet: 'SPREAD',
+                line: -8.5,
+                amount: 100,
+                result: 'WON',
+                finalScore: 'Houston 78, Kansas 65',
+                total: 143,
+                profit: 90.91,
+                analysis: 'Houston won by 13, covered -8.5 easily. Strong defensive performance.'
+            },
+            {
+                date: '2026-02-14',
+                game: 'BYU vs Baylor',
+                bet: 'SPREAD',
+                line: 6.5,
+                amount: 100,
+                result: 'LOST',
+                finalScore: 'Baylor 82, BYU 71',
+                total: 153,
+                profit: -100,
+                analysis: 'BYU lost by 11, needed +6.5. Missed injury report cost this bet. Learned to check injuries 1hr before tip.'
+            }
+        ];
 
         // Your active bets (UPDATE THIS WHEN YOU PLACE BETS!)
         const ACTIVE_BETS = [
@@ -408,20 +624,38 @@
 
         // Your winning formula for total bets
         const BETTING_CRITERIA = {
-            // Look for games with specific total ranges
             minTotal: 135,
             maxTotal: 175,
-            
-            // Confidence levels based on your research
             highConfidenceKeywords: ['big ten', 'big east', 'sec', 'acc'],
-            
-            // Avoid these (based on your losses)
             avoidConferences: ['wcc']
         };
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update tab styling
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.tab').classList.add('active');
+            
+            // Reload content based on tab
+            loadPicks();
+        }
 
         async function loadPicks() {
             const content = document.getElementById('content');
             const lastUpdated = document.getElementById('lastUpdated');
+            
+            // Show past results without API call
+            if (currentTab === 'past') {
+                displayPastResults();
+                const now = new Date();
+                lastUpdated.textContent = `Last updated: ${now.toLocaleTimeString('en-US', { 
+                    hour: 'numeric', 
+                    minute: '2-digit',
+                    hour12: true 
+                })}`;
+                return;
+            }
             
             content.innerHTML = `
                 <div class="loading">
@@ -437,14 +671,17 @@
                     fetch(`https://api.the-odds-api.com/v4/sports/${SPORT}/scores/?apiKey=${API_KEY}&daysFrom=1`).then(r => r.json())
                 ]);
                 
-                // Display live tracking first
-                displayLiveTracking(scoresData);
-                
-                // Filter and rank games
-                const recommendations = analyzeGames(oddsData);
-                
-                // Display picks
-                displayPicks(recommendations);
+                // For "today" tab, show live tracking + today's picks
+                if (currentTab === 'today') {
+                    displayLiveTracking(scoresData);
+                    const recommendations = analyzeGames(oddsData, 0); // 0 = today
+                    displayPicks(recommendations, 'Today');
+                }
+                // For "upcoming" tab, show tomorrow's picks
+                else if (currentTab === 'upcoming') {
+                    const recommendations = analyzeGames(oddsData, 1); // 1 = tomorrow
+                    displayPicks(recommendations, 'Tomorrow');
+                }
                 
                 // Update timestamp
                 const now = new Date();
@@ -465,6 +702,89 @@
                     </div>
                 `;
             }
+        }
+
+        function displayPastResults() {
+            const content = document.getElementById('content');
+            
+            if (PAST_RESULTS.length === 0) {
+                content.innerHTML = `
+                    <div class="no-picks">
+                        <h3>📭 No Past Results Yet</h3>
+                        <p style="margin-top: 10px;">Your betting history will appear here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="section-header">📊 Your Betting History</div>';
+            
+            const wins = PAST_RESULTS.filter(r => r.result === 'WON').length;
+            const losses = PAST_RESULTS.filter(r => r.result === 'LOST').length;
+            const totalProfit = PAST_RESULTS.reduce((sum, r) => sum + r.profit, 0);
+            
+            html += `
+                <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
+                    <div style="font-size: 1.2rem; opacity: 0.8; margin-bottom: 10px;">Overall Record</div>
+                    <div style="font-size: 2rem; font-weight: bold;">
+                        ${wins}-${losses} 
+                        <span style="font-size: 1.2rem; opacity: 0.7;">(${((wins/(wins+losses))*100).toFixed(1)}%)</span>
+                    </div>
+                    <div style="font-size: 1.5rem; color: ${totalProfit >= 0 ? '#4ade80' : '#ef4444'}; margin-top: 10px;">
+                        ${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}
+                    </div>
+                </div>
+            `;
+
+            // Sort by date (newest first)
+            const sortedResults = [...PAST_RESULTS].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedResults.forEach(result => {
+                const resultClass = result.result === 'WON' ? 'won' : 'lost';
+                const badgeClass = result.result === 'WON' ? 'badge-won' : 'badge-lost';
+                const profitColor = result.result === 'WON' ? '#4ade80' : '#ef4444';
+                
+                const resultDate = new Date(result.date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+
+                html += `
+                    <div class="past-result ${resultClass}">
+                        <div class="result-badge ${badgeClass}">
+                            ${result.result} ${result.result === 'WON' ? '✅' : '❌'}
+                        </div>
+                        
+                        <div class="game-matchup">${result.game}</div>
+                        
+                        <div class="game-info">
+                            <span class="date-badge">${resultDate}</span>
+                            <span>Bet: ${result.bet} ${result.line}</span>
+                            <span>Amount: $${result.amount}</span>
+                        </div>
+
+                        <div class="score-display" style="margin-top: 15px;">
+                            ${result.finalScore}
+                            <span style="margin-left: 15px; color: #667eea;">Total: ${result.total}</span>
+                        </div>
+
+                        <div style="margin-top: 10px; font-size: 1.2rem; font-weight: bold; color: ${profitColor};">
+                            ${result.profit >= 0 ? '+' : ''}$${result.profit.toFixed(2)}
+                        </div>
+
+                        <div class="analysis-section">
+                            <div class="analysis-title">📈 Post-Game Analysis</div>
+                            <div style="opacity: 0.9; line-height: 1.6;">
+                                ${result.analysis}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            content.innerHTML = html;
         }
 
         function displayLiveTracking(scoresData) {
@@ -592,14 +912,23 @@
             `;
         }
 
-        function analyzeGames(games) {
+        function analyzeGames(games, dayOffset = 0) {
             const picks = [];
             const now = new Date();
+            
+            // Calculate target date
+            const targetDate = new Date(now);
+            targetDate.setDate(targetDate.getDate() + dayOffset);
+            targetDate.setHours(0, 0, 0, 0);
+            
+            const nextDay = new Date(targetDate);
+            nextDay.setDate(nextDay.getDate() + 1);
 
             games.forEach(game => {
-                // Only show games that haven't started yet
                 const gameTime = new Date(game.commence_time);
-                if (gameTime < now) return;
+                
+                // Filter by target date
+                if (gameTime < targetDate || gameTime >= nextDay) return;
 
                 // Get the total line
                 const totalsMarket = game.bookmakers?.[0]?.markets?.find(m => m.key === 'totals');
@@ -691,23 +1020,29 @@
             return picks;
         }
 
-        function displayPicks(picks) {
+        function displayPicks(picks, dayLabel = 'Today') {
             const content = document.getElementById('content');
+            const existingHtml = content.innerHTML;
 
             if (picks.length === 0) {
-                content.innerHTML = `
+                const noPicks = `
                     <div class="no-picks">
-                        <h3>📭 No Strong Picks Right Now</h3>
-                        <p style="margin-top: 10px;">Check back later or refresh to see new games.</p>
+                        <h3>📭 No Strong Picks for ${dayLabel}</h3>
+                        <p style="margin-top: 10px;">Check back later or switch tabs to see other games.</p>
                     </div>
                 `;
+                if (currentTab === 'today') {
+                    content.innerHTML = existingHtml + noPicks;
+                } else {
+                    content.innerHTML = noPicks;
+                }
                 return;
             }
 
             const highConfidence = picks.filter(p => p.confidence === 'HIGH');
             const mediumConfidence = picks.filter(p => p.confidence === 'MEDIUM');
 
-            let html = '';
+            let html = `<div class="section-header">🎯 ${dayLabel}'s Picks</div>`;
 
             if (highConfidence.length > 0) {
                 html += `<div class="picks-section">
@@ -727,7 +1062,11 @@
                 html += `</div>`;
             }
 
-            content.innerHTML = html;
+            if (currentTab === 'today') {
+                content.innerHTML = existingHtml + html;
+            } else {
+                content.innerHTML = html;
+            }
         }
 
         function renderPickCard(pick) {
