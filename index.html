@@ -455,15 +455,15 @@
             <div class="stats">
                 <div class="stat-box">
                     <div class="stat-label">Your Record</div>
-                    <div class="stat-value">6-2</div>
+                    <div class="stat-value">7-2</div>
                 </div>
                 <div class="stat-box">
                     <div class="stat-label">Total Bets</div>
-                    <div class="stat-value">5-0 🔥</div>
+                    <div class="stat-value">6-0 🔥</div>
                 </div>
                 <div class="stat-box">
-                    <div class="stat-label">Net Profit</div>
-                    <div class="stat-value">+$249.99</div>
+                    <div class="stat-label">Win Rate</div>
+                    <div class="stat-value">77.8%</div>
                 </div>
             </div>
         </div>
@@ -503,15 +503,33 @@
         // Your betting history (UPDATE THIS WHEN BETS SETTLE!)
         const PAST_RESULTS = [
             {
+                date: '2026-02-20',
+                game: 'VCU @ Saint Louis',
+                bet: 'UNDER',
+                line: 164.5,
+                result: 'WON',
+                finalScore: 'Saint Louis 88, VCU 75',
+                total: 163,
+                analysis: 'VCU road UNDER trend (18-2) came through again. Saint Louis high-powered offense held in check. Hit UNDER by 1.5 points - close but a win!'
+            },
+            {
+                date: '2026-02-20',
+                game: 'Purdue vs Indiana',
+                bet: 'OVER',
+                line: 148.5,
+                result: 'PENDING',
+                finalScore: 'Game in progress',
+                total: 0,
+                analysis: 'CBS Model showed 72% OVER confidence. OVER hit in 4 of last 7 H2H meetings. Both teams have offensive firepower in this rivalry game.'
+            },
+            {
                 date: '2026-02-18',
                 game: 'Penn State vs Rutgers',
                 bet: 'OVER',
                 line: 148.5,
-                amount: 75,
                 result: 'WON',
                 finalScore: 'Penn State 78, Rutgers 75',
                 total: 153,
-                profit: 68.18,
                 analysis: 'Both teams trending OVER (Penn State 7 of last 9, Rutgers 4 of last 5). Model projected 150 points with 52% confidence. Hit by 4.5 points.'
             },
             {
@@ -519,11 +537,9 @@
                 game: 'Creighton @ UConn',
                 bet: 'OVER',
                 line: 142.5,
-                amount: 75,
                 result: 'WON',
                 finalScore: 'UConn 78, Creighton 71',
                 total: 149,
-                profit: 68.18,
                 analysis: 'Strong OVER trend (Creighton 7 of last 10, UConn 8 of last 10). Model showed 71% OVER confidence in simulations. Hit by 6.5 points.'
             },
             {
@@ -531,11 +547,9 @@
                 game: 'Duke vs Syracuse',
                 bet: 'OVER',
                 line: 142.5,
-                amount: 50,
                 result: 'WON',
                 finalScore: 'Duke 85, Syracuse 62',
                 total: 147,
-                profit: 45.45,
                 analysis: 'ACC matchup at Cameron Indoor. Last 5 H2H averaged 157.6 points. Model projected 71% OVER. Hit by 4.5 points.'
             },
             {
@@ -543,11 +557,9 @@
                 game: 'Murray State @ Belmont',
                 bet: 'OVER',
                 line: 152.5,
-                amount: 100,
                 result: 'WON',
                 finalScore: 'Belmont 89, Murray State 78',
                 total: 167,
-                profit: 90.91,
                 analysis: 'High-scoring conference matchup. Both teams averaging 75+ PPG. Hit by 14.5 points - blowout victory.'
             },
             {
@@ -555,11 +567,9 @@
                 game: 'San Diego @ San Francisco',
                 bet: 'UNDER',
                 line: 145.5,
-                amount: 100,
                 result: 'LOST',
                 finalScore: 'San Francisco 95, USF 76',
                 total: 171,
-                profit: -100,
                 analysis: 'WCC game went against trend. Avoided WCC unders since then. Lost by 25.5 points - lesson learned about conference tendencies.'
             },
             {
@@ -567,11 +577,9 @@
                 game: 'Florida vs Texas A&M',
                 bet: 'OVER',
                 line: 152.5,
-                amount: 100,
                 result: 'WON',
                 finalScore: 'Florida 89, TAMU 73',
                 total: 162,
-                profit: 90.91,
                 analysis: 'SEC offensive matchup. Both teams trending over. Hit by 9.5 points.'
             },
             {
@@ -579,11 +587,9 @@
                 game: 'Houston vs Kansas',
                 bet: 'SPREAD',
                 line: -8.5,
-                amount: 100,
                 result: 'WON',
                 finalScore: 'Houston 78, Kansas 65',
                 total: 143,
-                profit: 90.91,
                 analysis: 'Houston won by 13, covered -8.5 easily. Strong defensive performance.'
             },
             {
@@ -591,11 +597,9 @@
                 game: 'BYU vs Baylor',
                 bet: 'SPREAD',
                 line: 6.5,
-                amount: 100,
                 result: 'LOST',
                 finalScore: 'Baylor 82, BYU 71',
                 total: 153,
-                profit: -100,
                 analysis: 'BYU lost by 11, needed +6.5. Missed injury report cost this bet. Learned to check injuries 1hr before tip.'
             }
         ];
@@ -608,16 +612,6 @@
                 awayTeam: 'Indiana',
                 bet: 'OVER',
                 line: 148.5,
-                amount: 125,
-                date: '2026-02-20'
-            },
-            {
-                id: 'vcu-stlouis-feb20',
-                homeTeam: 'Saint Louis',
-                awayTeam: 'VCU',
-                bet: 'UNDER',
-                line: 164.5,
-                amount: 75,
                 date: '2026-02-20'
             }
         ];
@@ -721,18 +715,16 @@
             
             const wins = PAST_RESULTS.filter(r => r.result === 'WON').length;
             const losses = PAST_RESULTS.filter(r => r.result === 'LOST').length;
-            const totalProfit = PAST_RESULTS.reduce((sum, r) => sum + r.profit, 0);
+            const pending = PAST_RESULTS.filter(r => r.result === 'PENDING').length;
             
             html += `
                 <div style="text-align: center; margin-bottom: 30px; padding: 20px; background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
                     <div style="font-size: 1.2rem; opacity: 0.8; margin-bottom: 10px;">Overall Record</div>
                     <div style="font-size: 2rem; font-weight: bold;">
-                        ${wins}-${losses} 
+                        ${wins}-${losses}
                         <span style="font-size: 1.2rem; opacity: 0.7;">(${((wins/(wins+losses))*100).toFixed(1)}%)</span>
                     </div>
-                    <div style="font-size: 1.5rem; color: ${totalProfit >= 0 ? '#4ade80' : '#ef4444'}; margin-top: 10px;">
-                        ${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}
-                    </div>
+                    ${pending > 0 ? `<div style="margin-top: 10px; opacity: 0.8;">${pending} pending</div>` : ''}
                 </div>
             `;
 
@@ -740,9 +732,8 @@
             const sortedResults = [...PAST_RESULTS].sort((a, b) => new Date(b.date) - new Date(a.date));
 
             sortedResults.forEach(result => {
-                const resultClass = result.result === 'WON' ? 'won' : 'lost';
-                const badgeClass = result.result === 'WON' ? 'badge-won' : 'badge-lost';
-                const profitColor = result.result === 'WON' ? '#4ade80' : '#ef4444';
+                const resultClass = result.result === 'WON' ? 'won' : (result.result === 'LOST' ? 'lost' : '');
+                const badgeClass = result.result === 'WON' ? 'badge-won' : (result.result === 'LOST' ? 'badge-lost' : 'status-pending');
                 
                 const resultDate = new Date(result.date).toLocaleDateString('en-US', {
                     weekday: 'short',
@@ -754,7 +745,7 @@
                 html += `
                     <div class="past-result ${resultClass}">
                         <div class="result-badge ${badgeClass}">
-                            ${result.result} ${result.result === 'WON' ? '✅' : '❌'}
+                            ${result.result} ${result.result === 'WON' ? '✅' : (result.result === 'LOST' ? '❌' : '⏳')}
                         </div>
                         
                         <div class="game-matchup">${result.game}</div>
@@ -762,20 +753,15 @@
                         <div class="game-info">
                             <span class="date-badge">${resultDate}</span>
                             <span>Bet: ${result.bet} ${result.line}</span>
-                            <span>Amount: $${result.amount}</span>
                         </div>
 
                         <div class="score-display" style="margin-top: 15px;">
                             ${result.finalScore}
-                            <span style="margin-left: 15px; color: #667eea;">Total: ${result.total}</span>
-                        </div>
-
-                        <div style="margin-top: 10px; font-size: 1.2rem; font-weight: bold; color: ${profitColor};">
-                            ${result.profit >= 0 ? '+' : ''}$${result.profit.toFixed(2)}
+                            ${result.result !== 'PENDING' ? `<span style="margin-left: 15px; color: #667eea;">Total: ${result.total}</span>` : ''}
                         </div>
 
                         <div class="analysis-section">
-                            <div class="analysis-title">📈 Post-Game Analysis</div>
+                            <div class="analysis-title">📈 ${result.result === 'PENDING' ? 'Pre-Game' : 'Post-Game'} Analysis</div>
                             <div style="opacity: 0.9; line-height: 1.6;">
                                 ${result.analysis}
                             </div>
@@ -827,7 +813,6 @@
                             </div>
                             <div style="text-align: right;">
                                 <div style="font-size: 0.9rem; opacity: 0.8;">Your Bet: ${bet.bet} ${bet.line}</div>
-                                <div style="font-size: 0.9rem; opacity: 0.8;">Amount: $${bet.amount}</div>
                             </div>
                         </div>
                         <div style="margin-top: 10px; opacity: 0.7; font-size: 0.9rem;">
@@ -890,7 +875,6 @@
                         </div>
                         <div style="text-align: right;">
                             <div style="font-size: 0.9rem; opacity: 0.8;">Your Bet: ${bet.bet} ${bet.line}</div>
-                            <div style="font-size: 0.9rem; opacity: 0.8;">Amount: $${bet.amount}</div>
                         </div>
                     </div>
                     
@@ -902,12 +886,6 @@
                     <div class="bet-result ${resultClass}">
                         ${resultText}
                     </div>
-
-                    ${isCompleted && isWinning ? `
-                        <div style="margin-top: 10px; font-size: 0.9rem; color: #4ade80;">
-                            💰 Profit: +$${(bet.amount * 0.9091).toFixed(2)}
-                        </div>
-                    ` : ''}
                 </div>
             `;
         }
@@ -1118,10 +1096,6 @@
                     </div>
 
                     ${reasoningHtml}
-
-                    <div class="bet-sizing">
-                        <strong>💵 Suggested Bet Size:</strong> ${pick.betSizing}
-                    </div>
                 </div>
             `;
         }
